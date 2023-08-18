@@ -1,0 +1,41 @@
+model:
+    name: 'YOLOPoint'
+    version: m
+    input_channels: 3
+    superpoint:
+        detection_threshold: 0.12   # important
+        nms: 8                      # important
+        nn_thresh: 0.7              # important
+        min_length: 2
+        max_length: 4
+    yolo:
+        conf_thres_box: 0.6
+        iou_thres_box: 0.45
+        classes: None   # filter by class
+        agnostic_nms: True # class-agnostic NMS
+        max_det: 1000
+        box: 0.05
+        cls: 0.5
+        cls_pw: 1.0
+        obj: 1.0
+        obj_pw: 1.0
+        iou_t: 0.2
+        anchor_t: 4.0
+        label_smoothing: 0.0
+        fl_gamma: 0.0
+
+# Classes
+names: ['Pedestrian', 'Car', 'Truck', 'Cyclist', 'Misc', 'Van', 'Tram']
+
+#data:
+##    dir: datasets/kitti/seqences/test/0000
+#    source_type: directory # directory or ros
+#    source: ~/Downloads/dataset/sequences/0011  # path/to/directory or ros/image/message/name
+
+# crop boundaries and resize width before inference
+#crop_resize: [270, 893, 295, -295, 640] # [y0, y1, x0, x1, w1]
+#crop_resize: [0, -1, 0, -1, 720] # [y0, y1, x0, x1, w1]
+
+#templates:
+#    # frame_id
+#    sensor/camera/surround/front: templates/surround-front-image_rect_color.png

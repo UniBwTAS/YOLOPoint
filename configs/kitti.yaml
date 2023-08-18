@@ -1,0 +1,205 @@
+data:
+    dataset: Kitti
+    cache_images: false  # set false for large datasets!
+    labels:
+        points: logs/YOLOPointL/kitti
+#        points: logs/YOLOPointM_kitti/kitti960
+        cache: false
+    preprocessing:
+        img_size: 960
+        pad: 0
+    suffix: png
+
+    augmentation:
+        photometric:
+            enable: true
+            enable_train: true
+            enable_val: false
+            params:
+#                random_brightness: {max_abs_change: 25}
+                random_contrast: {strength_range: [0.8, 1.2]}
+#                additive_gaussian_noise: {stddev_range: [0, 5]}
+                additive_shade:
+                    transparency_range: [-0.25, 0.25]
+                    kernel_size_range: [100, 150]
+                motion_blur: {max_kernel_size: 3}
+#                add_elementwise: {value: [-8, 8], per_channel: 0.3}
+                hsv: [0.05, 0.2, 0.3]
+            params_light:
+                channel_shuffle: 0.0
+                hsv: [0.1, 0.05, 0.1]
+        homographic:
+            enable: true
+            enable_train: true
+            enable_val: false
+            params: # not used for mosaic
+                translation: true
+                rotation: true
+                scaling: true
+                perspective: true
+                scaling_amplitude: 0.1
+                perspective_amplitude_x: 0.02
+                perspective_amplitude_y: 0.02
+                patch_ratio: 0.9
+                max_angle: 0.03  # 3.14
+                allow_artifacts: true
+                translation_overflow: 0.05
+            mosaic:
+                enable: true   # enable homographic augmentation for mosaic # but if set to false...
+                params:
+                    translation: true
+                    rotation: true # set to false for full yolo training
+                    scaling: true
+                    perspective: true # set to false for full yolo training
+                    scaling_amplitude: 0.05
+                    perspective_amplitude_x: 0.02
+                    perspective_amplitude_y: 0.02
+                    patch_ratio: 1.0
+                    allow_artifacts: true
+                    translation_overflow: 0.45
+                    max_angle: 0.03  # 3.14
+            flipping:
+                horizontal: 0.5
+                vertical: 0.0
+            cropHW: [288, 896]  # [216, 720]
+            valid_border_margin: 2
+        mosaic: 0.0
+
+    warped_pair:
+        enable: true
+        params:
+            translation: true
+            rotation: true
+            scaling: true
+            perspective: true
+            scaling_amplitude: 0.2
+            perspective_amplitude_x: 0.2
+            perspective_amplitude_y: 0.2
+            patch_ratio: 0.7
+            max_angle: 0.2  # 1.57
+            translation_overflow: 0.1
+            allow_artifacts: true
+        mosaic_params:
+            translation: true
+            rotation: true
+            scaling: true
+            perspective: true
+            scaling_amplitude: 0.2 # 0.2
+            perspective_amplitude_x: 0.2
+            perspective_amplitude_y: 0.2
+            patch_ratio: 0.8   # 0.85
+            max_angle: 0.2   # 1.57
+            translation_overflow: 0.125
+            allow_artifacts: true
+        valid_border_margin: 2
+        photometric:
+            enable: true
+            enable_train: true
+            enable_val: false
+            params:
+                random_contrast: {strength_range: [0.6, 1.4]}
+                random_brightness: { max_abs_change: 15 }
+                additive_shade:
+                    transparency_range: [ -0.5, 0.5 ]
+                    kernel_size_range: [ 100, 150 ]
+                add_elementwise: { value: [ -5, 5 ], per_channel: 0.5 }
+                additive_gaussian_noise: {stddev_range: [0, 8]}
+                add: {value: [-5, 5], per_channel: 0.7}
+                hsv: [0.2, 0.1, 0.1]
+
+training_params:
+    workers_train: 8
+    workers_val: 8
+    train_batch_size: 16
+    val_batch_size: 16
+
+model:
+    input_channels: 3
+    lambda_loss: 0.1
+    lambda_loss_obj: 10
+
+    superpoint:
+        detection_threshold: 0.015
+        nms: 4
+        lambda_d: 250
+        top_k: 600  # make variable depending on image size
+        sparse_loss:
+            num_samples_per_image: 2200
+            num_masked_non_matches_per_match: 150
+    yolo:
+        conf_thres_box: 0.25
+        iou_thres_box: 0.45
+        classes: None   # filter by class
+        agnostic_nms: False # class-agnostic NMS
+        max_det: 1000
+        box: 0.05
+        cls: 0.5
+        cls_pw: 1.0
+        obj: 1.0
+        obj_pw: 1.0
+        iou_t: 0.2
+        anchor_t: 4.0
+        label_smoothing: 0.0
+        fl_gamma: 0.0
+
+optimizer:
+    name: Adam
+    lr: 0.0001
+
+scheduler:
+    lrf: 1 # set to 1 for no scheduling
+
+# training
+epochs: 100
+validation_interval: 1
+save_interval: 1
+save_best: false    # save all if false
+joint_training: true
+gradient_clip: 1.0 # store if loss explodes
+extended_val_sample_size: 500
+#warmup_epochs: 3.0
+#warmup_momentum: 0.8  # warmup initial momentum
+#warmup_bias_lr: 0.1  # warmup initial bias lr
+filter_points: true
+
+pretrained: logs/YOLOPointN_kitti/checkpoints/YOLOPointN_kitti_124_12626_ckpt.pth.tar
+resume: true
+
+freeze_layers: '0-62' #, 309-336, 337-370'   # e.g. '0-3, 12, 15, 20-30'; 0-3 --> 0,1,2,3
+# shared backbone: 0-62
+# full backbone: 0-140
+# yolo head: 141-242
+# kp detector head: 243-267
+# descriptor head: 268-298
+
+#warm_start: {lamda: 0.5, sigma: 0.01}
+
+# Classes
+#names: ['Pedestrian', 'Car', 'Truck', 'Cyclist', 'Misc', 'Van', 'Tram', 'DontCare']
+
+#names: ['wegweiser', 'playstreet_ends','parking','fire_hydrant','map','no_parking','dead_end','danger','playstreet',
+#        'no_entry','prohibition','keep_right','intersection','one_way_street','priority_road','building_number',
+#        'cyclist','person','car','dumpster', 'DontCare']
+
+names: [
+building_number,
+car,
+cyclist,
+danger,
+dead_end,
+dumpster,
+fire_hydrant,
+keep_right,
+map,
+misc,
+no_entry,
+no_parking,
+parking,
+pedestrian,
+playstreet,
+priority_road,
+prohibition,
+truck,
+van,
+wegweiser,
+dontcare]

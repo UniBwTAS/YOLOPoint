@@ -1,0 +1,113 @@
+# This config data is for concatenating multiple datasets
+# Concatenated datasets must have exactly the same object class names list
+sub_configs: [configs/kitti.yaml, configs/campus_landmarks.yaml]
+# WeightedRandomSampler params
+#weighted_random_sampler:
+#    weights: [0.5, 0.5]
+#    num_samples: 1792
+#    replacement: False
+
+# Overwrite individual configs:
+data:
+    cache_images: false  # set false for large datasets!
+    suffix: [jpg, png]
+    augmentation:
+        homographic:
+            cropHW: [288, 896]   # crop dims should smaller or equals the minimum image dimensions until rescaling is implemented
+
+training_params:
+    workers_train: 64
+    workers_val: 16
+    train_batch_size: 64
+    val_batch_size: 8
+
+model:
+    input_channels: 3
+    lambda_loss: 3
+    lambda_loss_obj: 5
+
+    superpoint:
+        detection_threshold: 0.015
+        nms: 4
+        lambda_d: 250
+        top_k: 600  # make variable depending on image size
+        sparse_loss:
+            num_samples_per_image: 2500              # 1800
+            num_masked_non_matches_per_match: 150     # 120
+    yolo:
+        conf_thres_box: 0.25
+        iou_thres_box: 0.45
+        classes: None   # filter by class
+        agnostic_nms: False # class-agnostic NMS
+        max_det: 1000
+        # adjust these for KITTI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        box: 0.05
+        cls: 0.5
+        cls_pw: 1.0
+        obj: 1.0
+        obj_pw: 1.0
+        iou_t: 0.2
+        anchor_t: 4.0
+        label_smoothing: 0.0
+        fl_gamma: 0.0
+
+optimizer:
+    name: Adam     # Adam, SGD
+    lr: 0.001
+    momentum: 0.937
+    decay: 0.000001
+
+scheduler:
+    lrf: 1 # set to 1 for no scheduling
+
+# training
+epochs: 100
+validation_interval: 1
+save_interval: 1
+save_best: false    # save all if false
+joint_training: true
+#gradient_clip: 1. # store if loss explodes
+extended_val_sample_size: 300
+filter_points: true
+
+#pretrained: logs/YOLOPoints/checkpoints/YOLOPoints_100_369601_ckpt.pth.tar
+#pretrained: logs/CampusKitti/checkpoints/CampusKitti_38_2171_ckpt.pth.tar
+#resume: True
+
+#freeze_layers: '0-170, 177-214'   # e.g. '0-3, 12, 15, 20-30'; 0-3 --> 0,1,2,3
+#freeze_layers: '0-170, 177-214'
+#freeze_layers: '0-98, 177-214'
+#freeze_layers: '0-44, 177-214'
+#freeze_layers: '0-44, 177-191, 193-213'
+#freeze_layers: '0-44'
+# full backbone: 0-98 | 0-140
+# yolo head: 141-242 ??? | 141-236
+# Detect layers 171-176 | 237-242
+# kp detector head: 177-194 | 243-266
+# descriptor head: 195-218 | 267-296
+
+#warm_start: {lamda: 0.5, sigma: 0.01}
+
+# Classes
+names: [
+building_number,
+car,
+cyclist,
+danger,
+dead_end,
+dumpster,
+fire_hydrant,
+keep_right,
+map,
+misc,
+no_entry,
+no_parking,
+parking,
+pedestrian,
+playstreet,
+priority_road,
+prohibition,
+truck,
+van,
+wegweiser,
+dontcare]

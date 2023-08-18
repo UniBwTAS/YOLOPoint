@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>object_msgs</name>
+  <version>0.0.1</version>
+  <description>The object_msgs package</description>
+
+  <maintainer email="andreas.reich@unibw.de">anre</maintainer>
+  <maintainer email="thorsten.luettel@unibw.de">thlu</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>std_msgs</depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <export>
+  </export>
+</package>

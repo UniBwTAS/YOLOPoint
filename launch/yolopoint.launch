@@ -1,0 +1,16 @@
+<launch>
+    <arg name="config" default="configs/campus_inference.yaml" />
+    <arg name="sensor_name" default="surround/front" />
+    <arg name="weights_path" default="weights/CampusKitti/checkpoints/CampusKitti_46_2291_ckpt.pth.tar" />
+    <arg name="filter_pts" default="false" />
+    <arg name="visualize" default="false" />
+
+  <node pkg="yolopoint" type="yolopoint_ros.py" name="yolopoint" output="screen">
+    <param name="config" type="str" value="$(arg config)" />
+    <param name="sensor_name" type="str" value="$(arg sensor_name)" />
+    <param name="weights_path" type="str" value="$(arg weights_path)" />
+    <param name="filter_pts" type="bool" value="$(arg filter_pts)" />
+    <param name="visualize" type="bool" value="$(arg visualize)" />
+  </node>
+</launch>
+

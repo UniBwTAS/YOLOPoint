@@ -1,0 +1,33 @@
+
+
+<launch>
+<group ns="perception">
+<group ns="yolopoint">
+    <group ns="surround_front">
+        <arg name="sensor_name" value="surround/front"/>
+        <arg name="node_name" value="keypoint_front"/>
+
+        <include file="$(find yolopoint)/launch/yolopoint.launch" pass_all_args="true"/>
+    </group>
+
+    <group ns="surround_left">
+        <arg name="sensor_name" value="surround/left"/>
+        <arg name="node_name" value="keypoint_left"/>
+        <include file="$(find yolopoint)/launch/yolopoint.launch" pass_all_args="true"/>
+    </group>
+
+    <group ns="surround_back">
+        <arg name="sensor_name" value="surround/back"/>
+        <arg name="node_name" value="keypoint_back"/>
+        <include file="$(find yolopoint)/launch/yolopoint.launch" pass_all_args="true"/>
+    </group>
+
+    <group ns="surround_right">
+        <arg name="sensor_name" value="surround/right"/>
+        <arg name="node_name" value="keypoint_right"/>
+        <include file="$(find yolopoint)/launch/yolopoint.launch" pass_all_args="true"/>
+    </group>
+</group>
+</group>
+
+</launch>

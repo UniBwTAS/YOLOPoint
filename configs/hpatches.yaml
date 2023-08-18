@@ -1,0 +1,21 @@
+data:
+    dataset: HPatches
+    alteration: v   # i or v
+    cache_images: false
+    input_channels: 3   # 3
+#    resize: [480, 640]
+
+training_params:
+    workers_val: 0
+    val_batch_size: 1
+
+model:
+    input_channels: 3   # 3
+    superpoint:
+        detection_threshold: 0.015
+        nn_thresh: 0.7
+        nms: 8
+        top_k: 300
+
+#pretrained: logs/SuperPointNet/checkpoints/superpoint_v1.pth
+pretrained: logs/YOLOPointS_kitti/checkpoints/YOLOPointS_kitti_70_7273_last_ckpt.pth.tar

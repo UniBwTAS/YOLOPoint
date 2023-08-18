@@ -1,0 +1,47 @@
+data:
+    labels: logs/Magicpoint_YOLO_M_det/predictions
+
+    preprocessing:
+        resize: [ 240, 320 ]
+
+    augmentation:
+        photometric:
+            enable: false
+            enable_train: false
+            enable_val: false
+        homographic:
+            enable: false
+            enable_train: false
+            enable_val: false
+    warped_pair:
+        enable: true
+        params:
+            translation: true
+            rotation: true
+            scaling: true
+            perspective: true
+            scaling_amplitude: 0.2
+            perspective_amplitude_x: 0.2
+            perspective_amplitude_y: 0.2
+            patch_ratio: 0.85
+            max_angle: 0.785  # 1.57
+            allow_artifacts: true
+        valid_border_margin: 3
+
+training_params:
+    workers_train: 8
+    workers_val: 8
+
+model:
+    train_batch_size: 8
+    val_batch_size: 8
+    detection_threshold: 0.015
+    nms: 4
+    lambda_d: 250
+    top_k: 600
+    input_channels: 3
+
+pretrained:
+  [
+    'logs/YOLOPoint_frozen/checkpoints/YOLOPoint_frozen_*_checkpoint.pth.tar'
+    ]
