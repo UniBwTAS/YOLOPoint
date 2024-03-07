@@ -25,7 +25,7 @@ except ImportError:
 
 class DataBaseClass(Dataset, ABC):
 
-    def __init__(self, transform=None, action="train", DEBUG=False, export=False, return_points=False, **config):
+    def __init__(self, transform=None, action="train", DEBUG=False, export=False, return_points=False, names=(), **config):
 
         self.config = config
         self.transform = transform
@@ -35,6 +35,11 @@ class DataBaseClass(Dataset, ABC):
         self.return_points = return_points
         self.cache_labels = self.config.get('labels', {}).get('cache')
         self.inp_ch = self.config.get('input_channels', 3)
+        # get don't care index if exists (for kitti)
+        try:
+            self.dc_idx =  next(i for i, string in enumerate(names) if string.lower() == 'dontcare')
+        except StopIteration:
+            self.dc_idx = None
 
         dataset=config['dataset'].lower()
         suffix = self.config['suffix']
@@ -56,7 +61,6 @@ class DataBaseClass(Dataset, ABC):
         for s in suffix:
             self.img_paths += glob(os.path.join(data_dir, 'images'+siz, self.action, '*'+s))
         self.img_paths = sorted(self.img_paths)
-        # self.img_paths = self.img_paths[::-1]       # delete this afterwards!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         n = len(self.img_paths)  # number of images
         assert n > 0, f"Zero images found in {data_dir}/images{str(self.img_size)}/{self.action}"
@@ -95,7 +99,6 @@ class DataBaseClass(Dataset, ABC):
             else:
                 LOGGER.info(f"Loading labels from {points_dir}")
                 self.point_paths = sorted(glob(os.path.join(points_dir, "*.npz")))
-                # self.point_paths = self.point_paths[::-1]       # delete this line afterwards!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if self.cache_labels:
                     LOGGER.info('Creating labels cache in:', cache_path)
                     all_points = []
@@ -170,7 +173,7 @@ class DataBaseClass(Dataset, ABC):
 
         sample = {"name": name, "index": index, "HW": (H_, W_, pad[4], pad[5]), "shapes": shapes}   # HW and shapes might break for homography adaptation
 
-        if self.config.get('homography_adaptation'):    # probably deprecated by now
+        if self.config.get('homography_adaptation'):
             return self._do_homographic_adaptation(image, shape, pad, sample, H0, W0, H, W)
 
         if self.points[index] is not None:
@@ -253,7 +256,6 @@ class DataBaseClass(Dataset, ABC):
 
             if not mosaic_piece:
                 labels = self._extend_and_xyxy2xywhn(labels, H=H, W=W, clip=True)
-                # pop dont_care labels (do only for KITTI!!!)
                 dont_care, labels = self._rmv_dont_care(labels)
                 sample.update({"dont_care": dont_care})
             else:
@@ -604,7 +606,7 @@ class Kitti(DataBaseClass):
 
     def _rmv_dont_care(self, labels):
         # removes "don't care" regions
-        return self._pop_labels(labels, 20)
+        return self._pop_labels(labels, self.dc_idx)
 
     def _mosaic_augmentation(self, idx):
         mosaic_pieces = []
@@ -707,7 +709,7 @@ class Kitti(DataBaseClass):
             img4 = img4.astype(np.float32) / 255.
 
         sample = self._get_warped_pair(torch.from_numpy(vanilla_img), vanilla_pts, sample, homography, sy, sx,
-                                       valid_mask=vanilla_mask, mosaic=True, crop_yx=[pady, padx], roi=(top, bot, left, right))
+                                       valid_mask=vanilla_mask, mosaic=True, crop_yx=[pady, padx])
 
         labels4 = self._extend_and_xyxy2xywhn(labels4, sy, sx, clip=True)
         dont_care, labels4 = self._rmv_dont_care(labels4)
