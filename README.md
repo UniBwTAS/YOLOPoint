@@ -62,7 +62,7 @@ See **Keypoint Labels** for more info on obtaining gt keypoints.
 ## Keypoint Labels
 Generate your own pseudo ground truth keypoint labels with
 ```
-$ python src/export_homography.py     TODO: make sure this works
+$ python src/export_homography.py --config configs/coco_export.yaml --weights weights/YOLOPointS.pth.tar --output_dir path/to/output_dir
 ```
 OR use the shell script to download and place them in the appropriate place:
 ```
