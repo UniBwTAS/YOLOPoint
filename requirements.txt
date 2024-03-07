@@ -1,0 +1,22 @@
+accelerate==0.17.1
+matplotlib==3.6.3
+matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-inline_1631080358261/work
+natsort==8.1.0
+numpy
+opencv-python
+Pillow==10.0.0
+PyQt5==5.15.7
+scikit-image==0.16.2
+scikit-learn==1.0.1
+scipy==1.4.1
+tensorboard==2.14.0
+tensorboard-data-server==0.7.1
+tensorboard-plugin-wit==1.8.1
+tensorboardX==2.5.1
+tensorflow==2.11.0
+tensorflow-estimator==2.11.0
+tensorflow-io-gcs-filesystem==0.24.0
+termcolor==2.2.0
+torch==1.10.0+cu113
+torchvision==0.11.1+cu113
+tqdm==4.65.0
