@@ -2,3 +2,4 @@ junk/
 .idea
 src/.idea
 
+__pycache__/
