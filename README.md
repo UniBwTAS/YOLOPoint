@@ -71,6 +71,7 @@ $ sh download_coco_points.sh
 ## Training
 1. Adjust your config file as needed before launching the training script.
 2. The following command will train YOLOPointS and save weights to logs/my_experiment/checkpoints.
+If you would like to try training the new experimental model set the --model flag to YOLOPointv52.
 ```
 $ accelerate launch src/train.py --config configs/coco.yaml --exper_name my_experiment --model YOLOPoint --version s
 ```
