@@ -28,12 +28,23 @@ class YoloPointFrontend:
         self.border_remove = 4  # Remove points this close to the border.
 
         # Load the network in inference mode.
-        version = model_config['version']
-        model_name = model_config['name']
-        self.names = config['names']
+        version = model_config.get('version')
+        model_name = model_config.get('name')
+        self.names = config.get('names')
+        model_info = torch.load(args.weights_path)
+        model_weights_config = model_info.get('config')
+
+        # Overwrite model loading info if necessary and possible
+        if model_weights_config:
+            print("Overwriting model loading info with config from weights file.")
+            version = model_weights_config['model']['version']
+            model_name = model_weights_config['model']['name']
+            # remove dontcare from object classes
+            self.names = [n for n in model_weights_config['names'] if n.lower() != 'dontcare']
+
         self.model = load_model(inp_ch=3, names=self.names, version=version, model_name=model_name).to(device)
-        state_dict = torch.load(args.weights_path)['model_state_dict']
-        self.model.load_state_dict(state_dict, strict=True)
+        state_dict = model_info['model_state_dict']
+        self.model.load_state_dict(state_dict, strict=True, verbose=True)
         self.model.eval()
         self.model.fuse()
 
@@ -44,17 +55,42 @@ class YoloPointFrontend:
 
         self.display_scale = args.display_scale
 
-        self.visualize = args.visualize
+        self.visualize = not args.no_visualize
         if self.visualize:
             self.tracker = PointTracker(max_length=config['model']['superpoint']['max_length'],
                                    nn_thresh=self.sp_config['nn_thresh'])
 
         if not ros:
-            img_paths = sorted(glob(os.path.join(args.source, '*.png'))) + \
-                        sorted(glob(os.path.join(args.source, '*.jpg')))
-            assert len(img_paths) > 0, f"Directory {args.source} either does not " \
-                                       f"exist or no images with extension png or jpg found"
-            self.stream_imgs(img_paths)
+            if args.source[-4:] in ['.mp4', '.avi']:
+                cap = cv2.VideoCapture(args.source)
+                if not cap.isOpened():
+                    print("Error: Could not open video.")
+                    return
+
+                while True:
+                    # Read a new frame
+                    ret, frame = cap.read()
+
+                    # If the frame was not retrieved, end of video is reached
+                    if not ret:
+                        print("End of video reached or cannot read the frame.")
+                        break
+
+                    # Display the frame
+                    pts, desc, obj_preds = self.process_img(frame)
+                    if self.visualize:
+                        self.visualize_objects_and_tracks(frame, pts, desc, obj_preds)
+
+                        # If the 'q' key is pressed, break from the loop
+                        if cv2.waitKey(25) & 0xFF == ord('q'):
+                            break
+
+            else:
+                img_paths = sorted(glob(os.path.join(args.source, '*.png'))) + \
+                            sorted(glob(os.path.join(args.source, '*.jpg')))
+                assert len(img_paths) > 0, f"Directory {args.source} either does not " \
+                                           f"exist or no images with extension png or jpg found"
+                self.stream_imgs(img_paths)
 
         self.templates = {} # currently only used with ROS
 
@@ -442,19 +478,16 @@ if __name__ == '__main__':
     demo_parser = argparse.ArgumentParser(description='YOLOPoint Demo.')
     demo_parser.add_argument('config', type=str, default='configs/kitti_inference.yaml',
                              help='path/to/config (default: configs/kitti_inference.yaml)')
-    demo_parser.add_argument('source', type=str, default='',
-                             help='path/to/directory')
-    demo_parser.add_argument('--weights_path', type=str, default='logs/YOLOPointS_kitti_nomo/checkpoints'
-                                                            '/YOLOPointS_kitti_nomo_110_11111_last_ckpt.pth.tar',
-                             help='Path to pretrained weights file'
-                             '(default: logs/YOLOPointS_kitti_nomo/checkpoints'
-                             '/YOLOPointS_kitti_nomo_110_11111_last_ckpt.pth.tar).')
+    demo_parser.add_argument('source', type=str,
+                             help='path/to/directory or mp4')
+    demo_parser.add_argument('--weights_path', type=str,
+                             help='Path to pretrained weights file')
     demo_parser.add_argument('--filter_pts', action='store_false',
-                             help='Filter out dynamic points by default')
-    demo_parser.add_argument('--visualize', action='store_true',
-                             help='Opencv visualization of points and tracks.')
+                             help='Filter out points on dynamic objects')
+    demo_parser.add_argument('--no_visualize', action='store_true',
+                             help='Block opencv visualization of points and tracks.')
     demo_parser.add_argument('--display_scale', type=float, default=1.,
-                             help='Factor to scale output visualization (default: 1, requires --visualize argument).')
+                             help='Factor to scale output visualization.')
     args = demo_parser.parse_args()
 
     # Ensure that all relative paths start from project root
