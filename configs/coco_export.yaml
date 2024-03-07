@@ -12,7 +12,7 @@ data:
             cropHW: false
     homography_adaptation:
         enable: true
-        num: 400
+        num: 100
         aggregation: 'sum'
         filter_counts: 0
         valid_border_margin: 5
@@ -28,26 +28,29 @@ data:
                 allow_artifacts: true
                 patch_ratio: 0.85
                 max_angle: 3.14159 #1.57
+        detection_threshold: 0.085
+        nms: 4
+        top_k: 1000
 
 normalize_points: false
 
 training_params:
-    workers_train: 32
-    workers_val: 32
+    workers_train: 4
+    workers_val: 4
     train_batch_size: 1
     val_batch_size: 1
 
-model:
-    name: 'YOLOPoint'
-    version: m
-    train_batch_size: 1
-    val_batch_size: 1
-    detection_threshold: 0.085
-    nms: 4
-    top_k: 1000
-    input_channels: 3
 
-pretrained: src/logs/YOLOPointM/checkpoints/YOLOPointM_100_184801_ckpt.pth.tar
+
+#model:
+#    name: 'YOLOPoint'
+#    version: m
+#    train_batch_size: 1
+#    val_batch_size: 1
+#    detection_threshold: 0.085
+#    nms: 4
+#    top_k: 1000
+#    input_channels: 3
 
 # Classes (dummy values will do)
 names: ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',

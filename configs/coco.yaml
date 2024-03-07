@@ -2,7 +2,7 @@ data:
     dataset: Coco
     cache_images: false
     labels:
-        points: logs/export_DGX
+        points: datasets/coco/points_export_640
         cache: false
     preprocessing:
         img_size: 640
@@ -105,10 +105,10 @@ data:
                 hsv: [0.1, 0.2, 0.5]
 
 training_params:
-    workers_train: 32
-    workers_val: 32
-    train_batch_size: 32
-    val_batch_size: 32
+    workers_train: 2
+    workers_val: 2
+    train_batch_size: 4
+    val_batch_size: 4
 
 model:
     input_channels: 3
