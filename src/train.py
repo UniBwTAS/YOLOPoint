@@ -3,14 +3,9 @@ import os
 import argparse
 import yaml
 from utils.loader import get_save_path, dataLoader
-# from utils.loss_functions import descriptor_loss_dense, descriptor_loss_sparse, ComputeDetectorLoss, ComputeObjectLoss, \
-#     infonce_loss_2
 
 from utils.loss_functions import  ComputeDetectorLoss, ComputeObjectLoss
 from utils.loss_functions import infonce as descriptor_loss_sparse
-
-
-
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim import lr_scheduler
@@ -66,10 +61,28 @@ class TrainAgent:
             LOGGER.info("Removing 'don't care' regions")
             self.names = self.names[:-1]
         self.nc = len(self.names)
-        self.input_channels = self.config['model'].get('input_channels', 3)
-        self.version = args.version
-        self.model_name = args.model
-        self.model = load_model(model_name=args.model, inp_ch=self.input_channels, names=self.names, version=args.version).to(self.device)
+
+        weights_path = self.config.get('pretrained')
+        resume = self.config.get('resume')
+        if resume and weights_path:
+            ckpt = torch.load(weights_path)
+            self.input_channels = ckpt['model']['config']['input_channels']
+            self.version = ckpt['config']['model']['version']
+            self.model_name = ckpt['model']['config']['name']
+            self.names = [n for n in ckpt['model']['config']['names'] if n.lower() != 'dontcare']
+        else:
+            self.input_channels = self.config['model'].get('input_channels', 3)
+            self.version = args.version
+            self.model_name = args.model
+            self.names = self.config['names']
+            if 'dontcare' in (name.lower() for name in self.names):
+                assert self.names[
+                           -1].lower() == 'dontcare', 'DontCare class must be at the end of the class list or else labels' \
+                                                      'will get mixed up!'
+                LOGGER.info("Removing 'don't care' regions")
+                self.names = self.names[:-1]
+            self.nc = len(self.names)
+        self.model = load_model(model_name=self.model_name, inp_ch=self.input_channels, names=self.names, version=self.version).to(self.device)
 
         # Optimizer
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=config['optimizer']['lr'])
@@ -79,8 +92,9 @@ class TrainAgent:
         lf = lambda x: (1 - x / self.config['epochs']) * (1.0 - lrf) + lrf  # linear
         self.scheduler = lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lf)
 
-        if weights_path := self.config.get('pretrained'):
-            ckpt = torch.load(weights_path)
+        if weights_path:
+            if not resume:
+                ckpt = torch.load(weights_path)
             if ckpt.get('names') == self.names:
                 # continue with training
                 self.model.load_state_dict(ckpt['model_state_dict'], strict=True)
@@ -118,8 +132,8 @@ class TrainAgent:
         # data loading
         # check for multiple datasets
 
-        self.train_loader = dataLoader(deepcopy(self.config), DEBUG=args.debug, action='train')
-        self.val_loader = dataLoader(deepcopy(self.config), DEBUG=args.debug, action='val')
+        self.train_loader = dataLoader(deepcopy(self.config), DEBUG=args.debug, action='train', names=self.names)
+        self.val_loader = dataLoader(deepcopy(self.config), DEBUG=args.debug, action='val', names=self.names)
         self.train_loader, self.val_loader = self.accelerator.prepare(self.train_loader, self.val_loader)
         # logging info
         data_size(self.train_loader, self.config, tag='train')
@@ -576,6 +590,7 @@ class TrainAgent:
                 "names": self.names,
                 "version": self.version,
                 "model_name": self.model_name,
+                "config": self.config,
                 **stats
             },
                 full_path)
