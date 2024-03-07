@@ -1,4 +1,4 @@
-# Templates
+# Templates (ROS specific)
 Use templates to filter out keypoint and object detections in unwanted static areas, e.g. the vehicle hood.
 
 Templates should be stored as grayscale png images, where all unwanted area pixels have the value 0,
