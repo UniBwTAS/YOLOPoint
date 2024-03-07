@@ -6,7 +6,7 @@ import collections
 from importlib import import_module
 quan = lambda x: x.round().long()
 import math
-from utils.general_yolo import LOGGER
+from .general_yolo import LOGGER
 
 def pop_class(box_targets, cls):
     """
