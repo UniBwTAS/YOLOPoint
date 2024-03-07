@@ -70,7 +70,7 @@ def get_weights(datasets, set_weights):
     # print("weights:", wei)
     return weights_long_norm
 
-def dataLoader(config, action, DEBUG=False, return_points=False, export=False):
+def dataLoader(config, action, DEBUG=False, return_points=False, export=False, names=()):
     """
     :param action: 'train' or 'val'
     :param DEBUG: no shuffle and load reduced dataset
@@ -100,6 +100,7 @@ def dataLoader(config, action, DEBUG=False, return_points=False, export=False):
             DEBUG=DEBUG,
             return_points=return_points,
             export=export,
+            names=names,
             **sub_config['data']
         )
         datasets.append(dataset_instance)
