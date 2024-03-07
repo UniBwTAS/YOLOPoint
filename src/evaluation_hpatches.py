@@ -282,8 +282,8 @@ def compute_homography(data, keep_k_points=600, correctness_thresh=3, orb=False,
             'keypoints2': warped_keypoints
         }
         matches_img = draw_matches_cv_new(draw_input, cv2_matches)
-        cv2.imshow("matches", matches_img.transpose(1, 2, 0))
-        cv2.waitKey(0)
+        # cv2.imshow("matches", matches_img.transpose(1, 2, 0))
+        # cv2.waitKey(0)
     else:
         matches_img = None
 
@@ -393,8 +393,7 @@ def to3dim(img):
     return img
 
 def evaluate(args):
-    # path = '/home/yoyee/Documents/SuperPoint/superpoint/logs/outputs/superpoint_coco/'
-    path = args.path
+    path = args.weights_path
     files = find_files_with_ext(path)
     correctness = []
     repeatability = []
@@ -506,8 +505,8 @@ def evaluate(args):
                 return warped_pnts.numpy()
 
             from numpy.linalg import inv
-            H, W = image.shape[:2]
-            unwarped_pnts = warpLabels(warped_keypoints, inv(real_H), H, W)
+            h, w = image.shape[:2]
+            unwarped_pnts = warpLabels(warped_keypoints, inv(real_H), h, w)
             score = (result['inliers'].sum() * 2) / (keypoints.shape[0] + unwarped_pnts.shape[0])
             print("m. score: ", score)
             mscore.append(score)
@@ -622,17 +621,20 @@ def evaluate(args):
 
                 img1 = to3dim(img1)
                 img2 = to3dim(img2)
+                # reshape height, width, channel
+                img1 = img1.transpose(1, 2, 0)
+                img2 = img2.transpose(1, 2, 0)
                 H = output['homography']
                 warped_image1 = cv2.warpPerspective(img1, H, (img2.shape[1], img2.shape[0]))
-                img1 = np.concatenate([img1, img1, img1], axis=2)
-                warped_image1 = np.stack([warped_image1, warped_image1, warped_image1], axis=2)
-                img2 = np.concatenate([img2, img2, img2], axis=2)
+                # img1 = np.concatenate([img1, img1, img1], axis=2)
+                # warped_image1 = np.stack([warped_image1, warped_image1, warped_image1], axis=2)
+                # img2 = np.concatenate([img2, img2, img2], axis=2)
                 plot_imgs([img1, img2, warped_image1], titles=['img1', 'img2', 'warped_image1'], dpi=200)
                 plt.tight_layout()
-                plt.savefig(path_warp + '/' + f_num + '.png')
+                # plt.savefig(path_warp + '/' + f_num + '.png')
 
                 ## plot filtered image
-                img1, img2 = data['image'], data['warped_image']
+                # img1, img2 = data['image'], data['warped_image']
                 warped_image1 = cv2.warpPerspective(img1, H, (img2.shape[1], img2.shape[0]))
                 plot_imgs([img1, img2, warped_image1], titles=['img1', 'img2', 'warped_image1'], dpi=200)
                 plt.tight_layout()
@@ -654,7 +656,8 @@ def evaluate(args):
                 plt.tight_layout()
                 plt.savefig(path_match + '/' + f_num + 'cv.png', bbox_inches='tight')
                 plt.close('all')
-                plt.Imshow(img)
+                cv2.imshow("test", img)
+                cv2.waitKey(0)
 
         if args.plotMatching:
             matches = result['matches'] # np [N x 4]
@@ -766,4 +769,6 @@ if __name__ == '__main__':
     parser.add_argument('-homo', '--homography', action='store_true')
     parser.add_argument('-plm', '--plotMatching', action='store_true')
     args = parser.parse_args()
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(os.path.join(current_directory, '..'))
     evaluate(args)
