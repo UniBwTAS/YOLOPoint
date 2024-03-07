@@ -52,7 +52,7 @@ def export_descriptor(config, output_dir, model_info):
 
     # data loading
     dataset = config['data']['dataset'] # HPatches
-    val_loader = dataLoader(config, dataset=dataset, action='val')
+    val_loader = dataLoader(config, action='val')
     data_size(val_loader, config, tag="val")
 
     # model loading
@@ -139,6 +139,9 @@ def export_descriptor(config, output_dir, model_info):
 
 
 if __name__ == "__main__":
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(os.path.join(current_directory, '..'))
+
     # global var
     torch.set_default_tensor_type(torch.FloatTensor)
 
@@ -146,8 +149,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # export command
-    parser.add_argument("--config", type=str)
-    parser.add_argument("--exper_name", type=str, default=None)
+    parser.add_argument('--config', type=str)
 
     args = parser.parse_args()
     with open(args.config, "r") as f:
@@ -160,9 +162,8 @@ if __name__ == "__main__":
     # get model name
     with open(exper_config, "r") as f:
         exper_config = yaml.safe_load(f)
-    # model_name = exper_config['model']['name']
-    model_name = 'YOLOPoint' #'SuperPointNet'           #exper_config['model']['name']
-    model_version =  's' #    None                                 #exper_config['model'].get('version')
+    model_name = exper_config['model']['name']
+    model_version =  exper_config['model'].get('version')
     inp_ch = exper_config['model']['input_channels']
     model_info = {'model_name': model_name, 'version': model_version, 'inp_ch': inp_ch}
 
