@@ -27,19 +27,6 @@ You can adjust the settings prior to training with (recommended for faster train
 $ accelerate config
 ```
 
-## Data Organization
-```
-YOLOPoint/
-├── datasets/
-│   ├── coco/
-│   │   ├── images/
-│   │   │    ├── train/
-│   │   │    └── val/
-│   │   └── labels/
-│   │        ├── train/
-│   │        └── val/
-```
-
 ## Pretrained Weights
 Download COCO pretrained and KITTI fine-tuned weights:
 
@@ -53,6 +40,24 @@ Download COCO pretrained and KITTI fine-tuned weights:
 **_[New]_**
 Experimental weights follow a lighter YOLOv8-like architecture, were trained with InfoNCE loss and seem to have improved accuracy for keypoint matching.
 However, this has not yet been thoroughly evaluated and is not part of the paper.
+
+## Data Organization
+For pretraining weights on COCO, your file structure should look like this:
+```
+YOLOPoint/
+├── datasets/
+│   ├── coco/
+│   │   ├── images/
+│   │   │    ├── train/
+│   │   │    └── val/
+│   │   ├── labels/
+│   │   │    ├── train/
+│   │   │    └── val/
+│   │   └── coco_points/
+```
+Be sure to use the COCO2017 split!
+Also store your pseudo-ground truth keypoint labels in ./datasets/coco/coco_points.
+See **Keypoint Labels** for more info on obtaining gt keypoints.
 
 ## Keypoint Labels
 Generate your own pseudo ground truth keypoint labels with
