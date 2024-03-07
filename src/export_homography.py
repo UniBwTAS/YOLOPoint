@@ -21,7 +21,7 @@ from utils.utils import flattenDetection, data_size, load_model, warp_image_batc
 
 
 @torch.no_grad()
-def homographic_export(config, output_dir, export_task):
+def homographic_export(config, args, export_task):
     """
     input 1 images, output pseudo ground truth by homography adaptation.
     Save labels:
@@ -36,12 +36,12 @@ def homographic_export(config, output_dir, export_task):
     print(f"Export {dataset} {export_task} data on device: {device}")
 
     ## parameters
-    nms_dist = config["model"]["nms"]  # 4
-    top_k = config["model"]["top_k"]
-    conf_thresh = config["model"]["detection_threshold"]
+    nms_dist = config["data"]["homography_adaptation"]["nms"]  # 4
+    top_k = config["data"]["homography_adaptation"]["top_k"]
+    conf_thresh = config["data"]["homography_adaptation"]["detection_threshold"]
 
     ## save data
-    save_path = Path(output_dir)
+    save_path = Path(args.output_dir)
     save_output = save_path / export_task
     print(f"=> will save everything to {save_output}")
     save_output.mkdir(parents=True, exist_ok=True)
@@ -51,23 +51,20 @@ def homographic_export(config, output_dir, export_task):
     data_size(loader, config, tag=export_task)
 
     # model loading
-    weights_path = config["pretrained"]
-    try:
-        print("==> Loading pre-trained network.")
-        print("path:", weights_path)
-        model_conf = config["model"]
-        ch = model_conf["input_channels"]
-        version = model_conf["version"]
-        names = config["names"]
-        model_name = config["model"]["name"]
-        model = load_model(inp_ch=ch, names=names, version=version, model_name=model_name)
-        model.load_state_dict(torch.load(weights_path)['model_state_dict'])
-        model.eval().to(device)
-        print("==> Successfully loaded pre-trained network.")
+    weights_path = args.weights
 
-    except Exception:
-        print(f"load model: {weights_path} failed!")
-        raise
+    print("==> Loading pre-trained network.")
+    print("path:", weights_path)
+    ckpt = torch.load(weights_path)
+    model_conf = ckpt["config"]["model"]
+    ch = model_conf["input_channels"]
+    version = model_conf["version"]
+    names = ckpt["config"]["names"]
+    model_name = model_conf["name"]
+    model = load_model(inp_ch=ch, names=names, version=version, model_name=model_name)
+    model.load_state_dict(ckpt['model_state_dict'])
+    model.eval().to(device)
+    print("==> Successfully loaded pre-trained network.")
 
     # loop through all images
     for i, sample in enumerate(tqdm(loader, position=0)):
@@ -192,8 +189,9 @@ if __name__ == "__main__":
 
     # using homography adaptation to export detection psuedo ground truth
     parser = argparse.ArgumentParser()
-    parser.add_argument("config", type=str)
-    parser.add_argument("exper_name", type=str)
+    parser.add_argument("--config", type=str, default="configs/coco_export.yaml")
+    parser.add_argument("--weights", type=str, default="weights/YOLOPointM.pth.tar")
+    parser.add_argument("--output_dir", type=str)
     # parser.add_argument('--model', type=str)
     parser.add_argument('--gpu', type=int, nargs='+', default=[0,1,2,3])
     parser.add_argument('--tasks', type=str, nargs='+', default=['train', 'val'], help="'train' or 'val' or both")
@@ -206,15 +204,10 @@ if __name__ == "__main__":
 
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
-    # ######## for automatic execute ######## ---> comment out later
-    # config['pretrained'] = glob(os.path.join('logs/Magicpoint_YOLO_M_det/checkpoints/*_best.pth.tar'))[0]
-    print("config:", config)
 
-    output_dir = os.path.join('logs', args.exper_name)
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(args.output_dir, exist_ok=True)
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(x) for x in args.gpu)
 
     for export_task in args.tasks:
         print(f"Exporting {export_task} set")
-        homographic_export(config, output_dir, export_task)
-    #python src/export_homography.py configs/coco_export.yaml test --tasks val
+        homographic_export(config, args, export_task)
