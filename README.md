@@ -48,7 +48,9 @@ Download COCO pretrained and KITTI fine-tuned weights:
 | KITTI                | [n](https://huggingface.co/antopost/YOLOPoint/resolve/main/YOLOPointN_kitti.pth.tar?download=true) | [s](https://huggingface.co/antopost/YOLOPoint/resolve/main/YOLOPointS_kitti.pth.tar?download=true)    | [m](https://huggingface.co/antopost/YOLOPoint/resolve/main/YOLOPointM_kitti.pth.tar?download=true) |   |
 | COCO (experimental)  |                                                                                                  | [s](https://huggingface.co/antopost/YOLOPoint/resolve/main/YOLOPointSv52.pth.tar?download=true)      |   |   |
 | KITTI (experimental) |                                                                                                  | [s](https://huggingface.co/antopost/YOLOPoint/resolve/main/YOLOPointSv52_kitti.pth.tar?download=true) |   |   |
-**_[New]_** 
+
+
+**_[New]_**
 Experimental weights follow a lighter YOLOv8-like architecture, were trained with InfoNCE loss and seem to have improved accuracy for keypoint matching.
 However, this has not yet been thoroughly evaluated and is not part of the paper.
 
